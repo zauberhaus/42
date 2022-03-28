@@ -34,8 +34,9 @@ type InitFunc func(*RootCommand)
 
 type RootCommand struct {
 	cobra.Command
-	configFile string
-	version    *Version
+	configFile        string
+	defaultConfigFile string
+	version           *Version
 
 	config interface{}
 }
@@ -60,8 +61,8 @@ func (r *RootCommand) SetConfig(config interface{}) {
 	r.config = config
 }
 
-func (r *RootCommand) SetConfigFileName(configFile string) {
-	r.configFile = configFile
+func (r *RootCommand) SetDefaultConfigFile(configFile string) {
+	r.defaultConfigFile = configFile
 }
 
 func (r *RootCommand) SetVersion(version *Version) {
@@ -94,6 +95,10 @@ func (r *RootCommand) init() {
 		return nil
 	}
 
+	if r.defaultConfigFile == "" {
+		r.defaultConfigFile = r.Command.Name()
+	}
+
 	r.PersistentFlags().StringVar(&r.configFile, "config", "", "Config file (default is $HOME/"+r.configFile+".yaml)")
 }
 
@@ -113,7 +118,7 @@ func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
 			}
 
 			viper.AddConfigPath(home)
-			viper.SetConfigName(r.configFile)
+			viper.SetConfigName(r.defaultConfigFile)
 		}
 	}
 
