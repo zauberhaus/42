@@ -26,8 +26,8 @@ type ZapLogger struct {
 	*zap.SugaredLogger
 }
 
-func NewZapLogger() Logger {
-	logger, err := zap.NewProduction()
+func NewZapLogger(opts ...zap.Option) Logger {
+	logger, err := zap.NewProduction(opts...)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/zauberhaus/42/logger"
 
@@ -29,6 +30,7 @@ import (
 )
 
 type AddFunc func(*RootCommand)
+type InitFunc func(*RootCommand)
 
 type RootCommand struct {
 	cobra.Command
@@ -38,23 +40,42 @@ type RootCommand struct {
 	config interface{}
 }
 
-func NewRootCmd(cmd *cobra.Command, version *Version, configfile string, config interface{}, commands ...AddFunc) *RootCommand {
+func NewRootCmd(cmd *cobra.Command) *RootCommand {
 	var rootCmd *RootCommand
 
 	rootCmd = &RootCommand{
-		Command:    *cmd,
-		configFile: configfile,
-		config:     config,
-		version:    version,
+		Command: *cmd,
 	}
 
 	rootCmd.init()
 
-	for _, f := range commands {
-		f(rootCmd)
+	return rootCmd
+}
+
+func (r *RootCommand) SetConfig(config interface{}) {
+	if reflect.ValueOf(config).Type().Kind() != reflect.Pointer {
+		logger.Fatal("Configuration has to be a pointer")
 	}
 
-	return rootCmd
+	r.config = config
+}
+
+func (r *RootCommand) SetConfigFileName(configFile string) {
+	r.configFile = configFile
+}
+
+func (r *RootCommand) SetVersion(version *Version) {
+	r.version = version
+}
+
+func (r *RootCommand) WithInit(init InitFunc) {
+	init(r)
+}
+
+func (r *RootCommand) WithSubCommands(commands ...AddFunc) {
+	for _, c := range commands {
+		c(r)
+	}
 }
 
 func (r *RootCommand) Execute() error {
@@ -64,6 +85,8 @@ func (r *RootCommand) Execute() error {
 func (r *RootCommand) init() {
 	old := r.PersistentPreRunE
 	r.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		r.initializeConfig(cmd)
+
 		if old != nil {
 			return old(cmd, args)
 		}
@@ -107,7 +130,8 @@ func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	return viper.Unmarshal(r.config)
+	err := viper.Unmarshal(r.config)
+	return err
 }
 
 func (r *RootCommand) GetVersion() *Version {

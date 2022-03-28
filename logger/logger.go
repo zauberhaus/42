@@ -16,6 +16,8 @@ limitations under the License.
 
 package logger
 
+import "go.uber.org/zap"
+
 type (
 	// Logger is an interface that can be passed to ClientOptions.Logger.
 	Logger interface {
@@ -37,7 +39,9 @@ type (
 	}
 )
 
-var logger = NewZapLogger()
+var logger = NewZapLogger(
+	zap.AddCallerSkip(2),
+)
 
 func GetLogger() Logger {
 	return logger
