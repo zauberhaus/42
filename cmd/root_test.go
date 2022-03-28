@@ -19,6 +19,7 @@ package cmd_test
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -38,13 +39,16 @@ type Config struct {
 	Value int
 }
 
-func TestRunConfigFile(t *testing.T) {
+func TestRunYamlConfigFile(t *testing.T) {
+	expected, err := readConfig("./testdata/config.yaml")
+	assert.NoError(t, err)
+
 	rootCmd := cmd.NewRootCmd(
-		&cobra.Command{Use: "root-test",
-			Short: "A tool to watch and export Kubernetes logs to sentry",
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
 			Run: func(cmd *cobra.Command, args []string) {
-				assert.Equal(t, "test", config.Name)
-				assert.Equal(t, 1, config.Value)
+				assert.Equal(t, expected.Name, config.Name)
+				assert.Equal(t, expected.Value, config.Value)
 			},
 		},
 	)
@@ -52,17 +56,85 @@ func TestRunConfigFile(t *testing.T) {
 	rootCmd.SetConfig(&config)
 	rootCmd.SetArgs([]string{"--config", "./testdata/config.yaml"})
 
-	err := rootCmd.Execute()
+	err = rootCmd.Execute()
 	assert.NoError(t, err)
 }
 
-func TestRunFlags(t *testing.T) {
+func TestRunTomlConfigFile(t *testing.T) {
+	expected, err := readConfig("./testdata/config.yaml")
+	assert.NoError(t, err)
+
 	rootCmd := cmd.NewRootCmd(
-		&cobra.Command{Use: "root-test",
-			Short: "A tool to watch and export Kubernetes logs to sentry",
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
 			Run: func(cmd *cobra.Command, args []string) {
-				assert.Equal(t, t.Name(), config.Name)
-				assert.Equal(t, 99, config.Value)
+				assert.Equal(t, expected.Name, config.Name)
+				assert.Equal(t, expected.Value, config.Value)
+			},
+		},
+	)
+
+	rootCmd.SetConfig(&config)
+	rootCmd.SetArgs([]string{"--config", "./testdata/config.toml"})
+
+	err = rootCmd.Execute()
+	assert.NoError(t, err)
+}
+
+func TestRunJsonConfigFile(t *testing.T) {
+	expected, err := readConfig("./testdata/config.yaml")
+	assert.NoError(t, err)
+
+	rootCmd := cmd.NewRootCmd(
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
+			Run: func(cmd *cobra.Command, args []string) {
+				assert.Equal(t, expected.Name, config.Name)
+				assert.Equal(t, expected.Value, config.Value)
+			},
+		},
+	)
+
+	rootCmd.SetConfig(&config)
+	rootCmd.SetArgs([]string{"--config", "./testdata/config.json"})
+
+	err = rootCmd.Execute()
+	assert.NoError(t, err)
+}
+
+func TestRunEnvConfigFile(t *testing.T) {
+	expected, err := readConfig("./testdata/config.yaml")
+	assert.NoError(t, err)
+
+	rootCmd := cmd.NewRootCmd(
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
+			Run: func(cmd *cobra.Command, args []string) {
+				assert.Equal(t, expected.Name, config.Name)
+				assert.Equal(t, expected.Value, config.Value)
+			},
+		},
+	)
+
+	rootCmd.SetConfig(&config)
+	os.Setenv("CONFIG", "./testdata/config.yaml")
+
+	err = rootCmd.Execute()
+	assert.NoError(t, err)
+
+	os.Unsetenv("CONFIG")
+}
+
+func TestRunFlags(t *testing.T) {
+	name := t.Name()
+	value := len(t.Name())
+
+	rootCmd := cmd.NewRootCmd(
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
+			Run: func(cmd *cobra.Command, args []string) {
+				assert.Equal(t, name, config.Name)
+				assert.Equal(t, value, config.Value)
 			},
 		},
 	)
@@ -76,18 +148,21 @@ func TestRunFlags(t *testing.T) {
 	})
 
 	rootCmd.SetConfig(&config)
-	rootCmd.SetArgs([]string{"-n", t.Name(), "-v", "99"})
+	rootCmd.SetArgs([]string{"-n", name, "-v", fmt.Sprintf("%v", value)})
 	err := rootCmd.Execute()
 	assert.NoError(t, err)
 }
 
 func TestRunEnv(t *testing.T) {
+	name := t.Name()
+	value := len(t.Name())
+
 	rootCmd := cmd.NewRootCmd(
-		&cobra.Command{Use: "root-test",
-			Short: "A tool to watch and export Kubernetes logs to sentry",
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
 			Run: func(cmd *cobra.Command, args []string) {
-				assert.Equal(t, t.Name(), config.Name)
-				assert.Equal(t, 7365, config.Value)
+				assert.Equal(t, name, config.Name)
+				assert.Equal(t, value, config.Value)
 			},
 		},
 	)
@@ -100,8 +175,8 @@ func TestRunEnv(t *testing.T) {
 		cmd.BindCmdFlag(rc.Flags(), "value")
 	})
 
-	os.Setenv("NAME", t.Name())
-	os.Setenv("VALUE", "7365")
+	os.Setenv("NAME", name)
+	os.Setenv("VALUE", fmt.Sprintf("%v", value))
 
 	rootCmd.SetConfig(&config)
 	err := rootCmd.Execute()
@@ -113,8 +188,8 @@ func TestRunEnv(t *testing.T) {
 
 func TestRunSubCommand(t *testing.T) {
 	rootCmd := cmd.NewRootCmd(
-		&cobra.Command{Use: "root-test",
-			Short: "A tool to watch and export Kubernetes logs to sentry",
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
 			Run: func(cmd *cobra.Command, args []string) {
 				assert.Equal(t, t.Name(), config.Name)
 				assert.Equal(t, 7365, config.Value)
@@ -168,4 +243,19 @@ func TestRunSubCommand(t *testing.T) {
 
 		assert.Equal(t, version, &info, "Invalid value")
 	}
+}
+
+func readConfig(file string) (*Config, error) {
+	var result Config
+
+	yamlFile, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(yamlFile, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
