@@ -114,7 +114,7 @@ func (r *RootCommand) init() {
 	r.PersistentFlags().VarP(
 		enumflag.New(&r.logLevel, "level", loglevelIds, enumflag.EnumCaseInsensitive),
 		"log", "l",
-		"Loglevel ("+strings.Join(loglevelNames, ", ")+")")
+		"Log level ("+strings.Join(loglevelNames, ", ")+")")
 }
 
 func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
