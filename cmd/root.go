@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/zauberhaus/42/logger"
 
@@ -27,6 +28,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/thediveo/enumflag"
 )
 
 type AddFunc func(*RootCommand)
@@ -38,14 +40,16 @@ type RootCommand struct {
 	defaultConfigFile string
 	version           *Version
 
-	config interface{}
+	config   interface{}
+	logLevel logger.Level
 }
 
 func NewRootCmd(cmd *cobra.Command) *RootCommand {
 	var rootCmd *RootCommand
 
 	rootCmd = &RootCommand{
-		Command: *cmd,
+		Command:  *cmd,
+		logLevel: 0,
 	}
 
 	rootCmd.init()
@@ -88,6 +92,10 @@ func (r *RootCommand) init() {
 	r.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		r.initializeConfig(cmd)
 
+		if r.logLevel != 0 {
+			logger.SetLogLevel(r.logLevel)
+		}
+
 		if old != nil {
 			return old(cmd, args)
 		}
@@ -99,7 +107,14 @@ func (r *RootCommand) init() {
 		r.defaultConfigFile = r.Command.Name()
 	}
 
+	loglevelIds := logger.GetLogger().GetLevelMap()
+	loglevelNames := logger.GetLogger().GetLevelNames()
+
 	r.PersistentFlags().StringVar(&r.configFile, "config", "", "Config file (default is $HOME/"+r.configFile+".yaml)")
+	r.PersistentFlags().VarP(
+		enumflag.New(&r.logLevel, "mode", loglevelIds, enumflag.EnumCaseInsensitive),
+		"log", "l",
+		"Loglevel ("+strings.Join(loglevelNames, ",")+")")
 }
 
 func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
@@ -136,6 +151,7 @@ func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
 	}
 
 	err := viper.Unmarshal(r.config)
+
 	return err
 }
 

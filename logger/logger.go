@@ -16,7 +16,17 @@ limitations under the License.
 
 package logger
 
-import "go.uber.org/zap"
+type Level int
+
+const (
+	DebugLevel Level = iota - 1
+	InfoLevel
+	WarnLevel
+	ErrorLevel
+
+	PanicLevel Level = iota + 4
+	FatalLevel
+)
 
 type (
 	// Logger is an interface that can be passed to ClientOptions.Logger.
@@ -36,12 +46,24 @@ type (
 		Fatalf(template string, args ...interface{})
 
 		With(args ...interface{}) Logger
+
+		GetLevel() int8
+		GetLevelMap() map[int][]string
+		GetLevelNames() []string
 	}
 )
 
-var logger = NewZapLogger(
-	zap.AddCallerSkip(2),
-)
+var logger = NewZapLogger(InfoLevel, 2)
+
+func SetLogLevel(level Level) {
+	logger = NewZapLogger(level, 2)
+}
+
+func Observe(level Level) interface{} {
+	l, o := NewObservableZapLogger(level)
+	logger = l
+	return o
+}
 
 func GetLogger() Logger {
 	return logger
@@ -52,53 +74,53 @@ func SetLogger(l Logger) {
 }
 
 func Debug(args ...interface{}) {
-	logger.Debug(args)
+	logger.Debug(args...)
 }
 
 func Info(args ...interface{}) {
-	logger.Info(args)
+	logger.Info(args...)
 }
 
 func Warn(args ...interface{}) {
-	logger.Warn(args)
+	logger.Warn(args...)
 }
 
 func Error(args ...interface{}) {
-	logger.Error(args)
+	logger.Error(args...)
 }
 
 func Panic(args ...interface{}) {
-	logger.Panic(args)
+	logger.Panic(args...)
 }
 
 func Fatal(args ...interface{}) {
-	logger.Fatal(args)
+	logger.Fatal(args...)
 }
 
 func Debugf(template string, args ...interface{}) {
-	logger.Debugf(template, args)
+	logger.Debugf(template, args...)
 }
 
 func Infof(template string, args ...interface{}) {
-	logger.Infof(template, args)
+	logger.Infof(template, args...)
 }
 
 func Warnf(template string, args ...interface{}) {
-	logger.Warn(template, args)
+	logger.Warnf(template, args...)
 }
 
 func Errorf(template string, args ...interface{}) {
-	logger.Errorf(template, args)
+	logger.Errorf(template, args...)
 }
 
 func Panicf(template string, args ...interface{}) {
-	logger.Panicf(template, args)
+	logger.Panicf(template, args...)
 }
 
 func Fatalf(template string, args ...interface{}) {
-	logger.Panicf(template, args)
+	logger.Panicf(template, args...)
 }
 
 func With(args ...interface{}) Logger {
-	return logger.With(args)
+	return logger.With(args...)
 }

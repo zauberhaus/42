@@ -245,6 +245,23 @@ func TestRunSubCommand(t *testing.T) {
 	}
 }
 
+func TestLogLevel(t *testing.T) {
+	rootCmd := cmd.NewRootCmd(
+		&cobra.Command{Use: t.Name(),
+			Short: "Test program",
+			Run: func(cmd *cobra.Command, args []string) {
+				assert.Equal(t, int8(-1), logger.GetLogger().GetLevel())
+			},
+		},
+	)
+
+	rootCmd.SetConfig(&config)
+	rootCmd.SetArgs([]string{"-l", "debug"})
+
+	err := rootCmd.Execute()
+	assert.NoError(t, err)
+}
+
 func readConfig(file string) (*Config, error) {
 	var result Config
 
