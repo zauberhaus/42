@@ -112,9 +112,9 @@ func (r *RootCommand) init() {
 
 	r.PersistentFlags().StringVar(&r.configFile, "config", "", "Config file (default is $HOME/"+r.configFile+".yaml)")
 	r.PersistentFlags().VarP(
-		enumflag.New(&r.logLevel, "mode", loglevelIds, enumflag.EnumCaseInsensitive),
+		enumflag.New(&r.logLevel, "level", loglevelIds, enumflag.EnumCaseInsensitive),
 		"log", "l",
-		"Loglevel ("+strings.Join(loglevelNames, ",")+")")
+		"Loglevel ("+strings.Join(loglevelNames, ", ")+")")
 }
 
 func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
