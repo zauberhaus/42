@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"reflect"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -43,11 +44,47 @@ func BindCmdFlag(flags *pflag.FlagSet, names ...string) {
 		return
 	}
 
-	BindFlag(target, flag)
+	viper.BindPFlag(target, flag)
 }
 
-func BindFlag(target string, flag *pflag.Flag) {
-	viper.BindPFlag(target, flag)
-	envVar := strings.ToUpper(strings.ReplaceAll(strings.ReplaceAll(flag.Name, "-", "_"), ".", "_"))
-	viper.BindEnv(target, envVar)
+func AutoBindEnv(config interface{}) {
+	parseTags(viper.GetViper(), reflect.ValueOf(config), []string{}, []string{})
+}
+
+func parseTags(viper *viper.Viper, value reflect.Value, path []string, envpath []string) {
+	if value.Kind() == reflect.Pointer {
+		value = value.Elem()
+	}
+
+	for i := 0; i < value.NumField(); i++ {
+		v := value.Field(i)
+		f := value.Type().Field(i)
+		tag := f.Tag.Get("env")
+		t := f.Type
+
+		switch t.Kind() {
+		case reflect.Struct:
+			subEnvPath := envpath
+			if tag != "" {
+				subEnvPath = append(envpath, strings.ToUpper(tag))
+			}
+
+			subPath := append(path, f.Name)
+
+			parseTags(viper, v, subPath, subEnvPath)
+		default:
+			tmp := append(path, f.Name)
+			name := strings.Join(tmp, ".")
+
+			if tag != "" {
+				tmp = append(envpath, strings.ToUpper(tag))
+				tag := strings.Join(tmp, "_")
+
+				viper.BindEnv(name, tag)
+			} else {
+				envVar := strings.ToUpper(strings.ReplaceAll(strings.ReplaceAll(name, "-", "_"), ".", "_"))
+				viper.BindEnv(name, envVar)
+			}
+		}
+	}
 }

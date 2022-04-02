@@ -109,7 +109,7 @@ func (r *RootCommand) init() {
 		"log", "l",
 		"Log level ("+strings.Join(loglevelNames, ", ")+")")
 
-	r.AutoBindEnv(r.config)
+	AutoBindEnv(r.config)
 }
 
 func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
@@ -152,8 +152,6 @@ func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
 
 	defaults.SetDefaults(r.config)
 	return nil
-
-	return err
 }
 
 func (r *RootCommand) GetVersion() *Version {
