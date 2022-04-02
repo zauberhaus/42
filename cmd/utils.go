@@ -76,7 +76,7 @@ func parseTags(viper *viper.Viper, value reflect.Value, path []string, envpath [
 			tmp := append(path, f.Name)
 			name := strings.Join(tmp, ".")
 
-			if tag != "" {
+			if tag != "" && tag != "skip" {
 				tmp = append(envpath, strings.ToUpper(tag))
 				tag := strings.Join(tmp, "_")
 
