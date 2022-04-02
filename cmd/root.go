@@ -19,9 +19,9 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 
+	"github.com/mcuadros/go-defaults"
 	"github.com/zauberhaus/42/logger"
 
 	"github.com/fsnotify/fsnotify"
@@ -44,25 +44,18 @@ type RootCommand struct {
 	logLevel logger.Level
 }
 
-func NewRootCmd(cmd *cobra.Command) *RootCommand {
+func NewRootCmd(cmd *cobra.Command, config interface{}) *RootCommand {
 	var rootCmd *RootCommand
 
 	rootCmd = &RootCommand{
 		Command:  *cmd,
 		logLevel: 0,
+		config:   config,
 	}
 
 	rootCmd.init()
 
 	return rootCmd
-}
-
-func (r *RootCommand) SetConfig(config interface{}) {
-	if reflect.ValueOf(config).Type().Kind() != reflect.Pointer {
-		logger.Fatal("Configuration has to be a pointer")
-	}
-
-	r.config = config
 }
 
 func (r *RootCommand) SetDefaultConfigFile(configFile string) {
@@ -115,6 +108,8 @@ func (r *RootCommand) init() {
 		enumflag.New(&r.logLevel, "level", loglevelIds, enumflag.EnumCaseInsensitive),
 		"log", "l",
 		"Log level ("+strings.Join(loglevelNames, ", ")+")")
+
+	r.AutoBindEnv(r.config)
 }
 
 func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
@@ -151,6 +146,12 @@ func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
 	}
 
 	err := viper.Unmarshal(r.config)
+	if err != nil {
+		return fmt.Errorf("Unmarshal config file: %v", err)
+	}
+
+	defaults.SetDefaults(r.config)
+	return nil
 
 	return err
 }

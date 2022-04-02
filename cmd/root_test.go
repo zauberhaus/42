@@ -50,10 +50,9 @@ func TestRunYamlConfigFile(t *testing.T) {
 				assert.Equal(t, expected.Name, config.Name)
 				assert.Equal(t, expected.Value, config.Value)
 			},
-		},
+		}, &config,
 	)
 
-	rootCmd.SetConfig(&config)
 	rootCmd.SetArgs([]string{"--config", "./testdata/config.yaml"})
 
 	err = rootCmd.Execute()
@@ -71,10 +70,9 @@ func TestRunTomlConfigFile(t *testing.T) {
 				assert.Equal(t, expected.Name, config.Name)
 				assert.Equal(t, expected.Value, config.Value)
 			},
-		},
+		}, &config,
 	)
 
-	rootCmd.SetConfig(&config)
 	rootCmd.SetArgs([]string{"--config", "./testdata/config.toml"})
 
 	err = rootCmd.Execute()
@@ -92,10 +90,9 @@ func TestRunJsonConfigFile(t *testing.T) {
 				assert.Equal(t, expected.Name, config.Name)
 				assert.Equal(t, expected.Value, config.Value)
 			},
-		},
+		}, &config,
 	)
 
-	rootCmd.SetConfig(&config)
 	rootCmd.SetArgs([]string{"--config", "./testdata/config.json"})
 
 	err = rootCmd.Execute()
@@ -113,10 +110,9 @@ func TestRunEnvConfigFile(t *testing.T) {
 				assert.Equal(t, expected.Name, config.Name)
 				assert.Equal(t, expected.Value, config.Value)
 			},
-		},
+		}, &config,
 	)
 
-	rootCmd.SetConfig(&config)
 	os.Setenv("CONFIG", "./testdata/config.yaml")
 
 	err = rootCmd.Execute()
@@ -136,7 +132,7 @@ func TestRunFlags(t *testing.T) {
 				assert.Equal(t, name, config.Name)
 				assert.Equal(t, value, config.Value)
 			},
-		},
+		}, &config,
 	)
 
 	rootCmd.WithInit(func(rc *cmd.RootCommand) {
@@ -147,7 +143,6 @@ func TestRunFlags(t *testing.T) {
 		cmd.BindCmdFlag(rc.Flags(), "value")
 	})
 
-	rootCmd.SetConfig(&config)
 	rootCmd.SetArgs([]string{"-n", name, "-v", fmt.Sprintf("%v", value)})
 	err := rootCmd.Execute()
 	assert.NoError(t, err)
@@ -164,7 +159,7 @@ func TestRunEnv(t *testing.T) {
 				assert.Equal(t, name, config.Name)
 				assert.Equal(t, value, config.Value)
 			},
-		},
+		}, &config,
 	)
 
 	rootCmd.WithInit(func(rc *cmd.RootCommand) {
@@ -178,7 +173,6 @@ func TestRunEnv(t *testing.T) {
 	os.Setenv("NAME", name)
 	os.Setenv("VALUE", fmt.Sprintf("%v", value))
 
-	rootCmd.SetConfig(&config)
 	err := rootCmd.Execute()
 	assert.NoError(t, err)
 
@@ -194,7 +188,7 @@ func TestRunSubCommand(t *testing.T) {
 				assert.Equal(t, t.Name(), config.Name)
 				assert.Equal(t, 7365, config.Value)
 			},
-		},
+		}, &config,
 	)
 
 	version := cmd.NewVersion("today", "123456", "v1.1.1", "dirty")
@@ -226,7 +220,6 @@ func TestRunSubCommand(t *testing.T) {
 		rc.AddCommand(versionCmd)
 	})
 
-	rootCmd.SetConfig(&config)
 	rootCmd.SetArgs([]string{
 		"version",
 	})
@@ -252,10 +245,9 @@ func TestLogLevel(t *testing.T) {
 			Run: func(cmd *cobra.Command, args []string) {
 				assert.Equal(t, int8(-1), logger.GetLogger().GetLevel())
 			},
-		},
+		}, &config,
 	)
 
-	rootCmd.SetConfig(&config)
 	rootCmd.SetArgs([]string{"-l", "debug"})
 
 	err := rootCmd.Execute()
