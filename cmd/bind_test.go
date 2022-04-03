@@ -56,29 +56,12 @@ func TestEnvBind(t *testing.T) {
 
 				assert.Equal(t, wanted, bindings)
 
-				value, err := lookup.LookupStringI(cfg, "Integer")
-				assert.NoError(t, err)
-				assert.Equal(t, 9987, value.Interface())
-
-				value, err = lookup.LookupStringI(cfg, "String")
-				assert.NoError(t, err)
-				assert.Equal(t, "teststring", value.Interface())
-
-				value, err = lookup.LookupStringI(cfg, "Bool")
-				assert.NoError(t, err)
-				assert.Equal(t, false, value.Interface())
-
-				value, err = lookup.LookupStringI(cfg, "Options.Path")
-				assert.NoError(t, err)
-				assert.Equal(t, "/test/path", value.Interface())
-
-				value, err = lookup.LookupStringI(cfg, "OptionsCopy.Path")
-				assert.NoError(t, err)
-				assert.Equal(t, "/test/path", value.Interface())
-
-				value, err = lookup.LookupStringI(cfg, "OptionsPointer.Path")
-				assert.NoError(t, err)
-				assert.Equal(t, "/test/path2", value.Interface())
+				assert.Equal(t, 9987, cfg.Integer)
+				assert.Equal(t, "teststring", cfg.String)
+				assert.Equal(t, false, cfg.Bool)
+				assert.Equal(t, "/test/path", cfg.Options.Path)
+				assert.Equal(t, "/test/path", cfg.OptionsCopy.Path)
+				assert.Equal(t, "/test/path2", cfg.OptionsPointer.Path)
 			},
 		}, &cfg,
 	)
@@ -91,6 +74,12 @@ func TestEnvBind(t *testing.T) {
 
 	err := rootCmd.Execute()
 	assert.NoError(t, err)
+
+	os.Unsetenv("INTEGER")
+	os.Unsetenv("STRING")
+	os.Unsetenv("BOOL")
+	os.Unsetenv("OPTIONS_PATH")
+	os.Unsetenv("OPTIONS_POINTER_PATH")
 }
 
 func TestDefaults(t *testing.T) {
