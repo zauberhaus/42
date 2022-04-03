@@ -48,19 +48,22 @@ func BindCmdFlag(flags *pflag.FlagSet, names ...string) {
 }
 
 func AutoBindEnv(config interface{}) {
-	parseTags(viper.GetViper(), reflect.ValueOf(config), []string{}, []string{})
+	parseTags(viper.GetViper(), reflect.ValueOf(config).Type(), []string{}, []string{})
 }
 
-func parseTags(viper *viper.Viper, value reflect.Value, path []string, envpath []string) {
-	if value.Kind() == reflect.Pointer {
-		value = value.Elem()
+func parseTags(viper *viper.Viper, fieldType reflect.Type, path []string, envpath []string) {
+	if fieldType.Kind() == reflect.Pointer {
+		fieldType = fieldType.Elem()
 	}
 
-	for i := 0; i < value.NumField(); i++ {
-		v := value.Field(i)
-		f := value.Type().Field(i)
+	for i := 0; i < fieldType.NumField(); i++ {
+		f := fieldType.Field(i)
 		tag := f.Tag.Get("env")
 		t := f.Type
+
+		if t.Kind() == reflect.Pointer {
+			t = t.Elem()
+		}
 
 		switch t.Kind() {
 		case reflect.Struct:
@@ -70,8 +73,7 @@ func parseTags(viper *viper.Viper, value reflect.Value, path []string, envpath [
 			}
 
 			subPath := append(path, f.Name)
-
-			parseTags(viper, v, subPath, subEnvPath)
+			parseTags(viper, t, subPath, subEnvPath)
 		default:
 			tmp := append(path, f.Name)
 			name := strings.Join(tmp, ".")
