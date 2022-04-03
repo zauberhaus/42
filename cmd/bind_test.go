@@ -31,7 +31,7 @@ func TestEnvBind(t *testing.T) {
 		&cobra.Command{Use: t.Name(),
 			Short: "Test program",
 			Run: func(c *cobra.Command, args []string) {
-				bindings := generator.GetEnvBindings()
+				bindings := generator.EnvBindings()
 				wanted := map[string][]string{
 					"integer": {
 						"INTEGER",
