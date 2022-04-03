@@ -19,7 +19,9 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
+	"unsafe"
 
 	"github.com/mcuadros/go-defaults"
 	"github.com/zauberhaus/42/logger"
@@ -161,4 +163,11 @@ func (r *RootCommand) GetVersion() *Version {
 
 func (r *RootCommand) GetConfig() interface{} {
 	return r.config
+}
+
+func (r *RootCommand) EnvBindings() map[string][]string {
+	f := reflect.ValueOf(viper.GetViper()).Elem().FieldByName("env")
+	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
+	i := rf.Interface()
+	return i.(map[string][]string)
 }

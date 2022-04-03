@@ -2,24 +2,11 @@ package generator
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
-	"unsafe"
-
-	"github.com/spf13/viper"
 )
 
-func EnvBindings() map[string][]string {
-	f := reflect.ValueOf(viper.GetViper()).Elem().FieldByName("env")
-	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	i := rf.Interface()
-	return i.(map[string][]string)
-}
-
-func GroupedBindings() ([]map[string]string, error) {
-	env := EnvBindings()
-
+func GroupBindings(env map[string][]string) ([]map[string]string, error) {
 	groups := make(map[string]map[string]string)
 	group := ""
 	var items map[string]string

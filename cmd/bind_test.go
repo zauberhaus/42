@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/zauberhaus/42/cmd"
-	"github.com/zauberhaus/42/generator"
 )
 
 type TestConfig struct {
@@ -27,11 +26,13 @@ type TestOptions struct {
 func TestEnvBind(t *testing.T) {
 	cfg := TestConfig{}
 
-	rootCmd := cmd.NewRootCmd(
+	var rootCmd *cmd.RootCommand
+
+	rootCmd = cmd.NewRootCmd(
 		&cobra.Command{Use: t.Name(),
 			Short: "Test program",
 			Run: func(c *cobra.Command, args []string) {
-				bindings := generator.EnvBindings()
+				bindings := rootCmd.EnvBindings()
 				wanted := map[string][]string{
 					"integer": {
 						"INTEGER",
