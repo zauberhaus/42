@@ -53,6 +53,8 @@ func NewRootCmd(cmd *cobra.Command, config interface{}) *RootCommand {
 		config:   config,
 	}
 
+	defaults.SetDefaults(config)
+
 	rootCmd.init()
 
 	return rootCmd
@@ -150,7 +152,6 @@ func (r *RootCommand) initializeConfig(cmd *cobra.Command) error {
 		return fmt.Errorf("Unmarshal config file: %v", err)
 	}
 
-	defaults.SetDefaults(r.config)
 	return nil
 }
 
