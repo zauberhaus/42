@@ -1,6 +1,7 @@
 package generator_test
 
 import (
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -50,7 +51,12 @@ func TestDecode(t *testing.T) {
 			cfg := TestConfig{}
 
 			filename := filepath.Join(dir, "config.json")
-			err = generator.Decode(wanted, filename)
+			data, err := generator.Marshal(wanted, filename)
+			if !assert.NoError(t, err) {
+				return
+			}
+
+			err = ioutil.WriteFile(filename, data, fs.ModePerm)
 			if !assert.NoError(t, err) {
 				return
 			}

@@ -4,52 +4,31 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/fs"
-	"io/ioutil"
 	"path/filepath"
 
 	"github.com/pelletier/go-toml"
-	"github.com/zauberhaus/42/logger"
 	"gopkg.in/yaml.v3"
 
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/hcl/hcl/printer"
 )
 
-func Decode(cfg interface{}, file string) error {
-
-	var data []byte
-	var err error
+func Marshal(cfg interface{}, file string) ([]byte, error) {
 
 	ext := filepath.Ext(file)[1:]
 
 	switch ext {
 	case "yml", "yaml":
-		data, err = yaml.Marshal(cfg)
-		if err != nil {
-			return err
-		}
+		return yaml.Marshal(cfg)
 	case "json":
-		data, err = json.MarshalIndent(cfg, "", "  ")
-		if err != nil {
-			return err
-		}
+		return json.MarshalIndent(cfg, "", "  ")
 	case "toml":
-		data, err = toml.Marshal(cfg)
-		if err != nil {
-			return err
-		}
+		return toml.Marshal(cfg)
 	case "hcl":
-		data, err = encode(cfg)
-		if err != nil {
-			return err
-		}
+		return encode(cfg)
 	default:
-		return fmt.Errorf("Unknown file extension")
+		return nil, fmt.Errorf("Unknown file extension")
 	}
-
-	logger.Infof("Write file: %v", file)
-	return ioutil.WriteFile(file, data, fs.ModePerm)
 }
 
 func encode(v interface{}) ([]byte, error) {
