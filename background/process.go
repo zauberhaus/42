@@ -17,7 +17,6 @@ limitations under the License.
 package background
 
 import (
-	"github.com/zauberhaus/42/logger"
 	"golang.org/x/net/context"
 )
 
@@ -28,10 +27,10 @@ type Process struct {
 	done   chan error
 	init   func(ctx context.Context) error
 	close  func(ctx context.Context) error
-	logger logger.Logger
+	logger Logger
 }
 
-func (p *Process) Init(name string, init func(ctx context.Context) error, close func(ctx context.Context) error, logger logger.Logger) {
+func (p *Process) Init(name string, init func(ctx context.Context) error, close func(ctx context.Context) error, logger Logger) {
 	ctx, cancel := context.WithCancel(context.Background())
 	p.ctx = ctx
 	p.cancel = cancel
